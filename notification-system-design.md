@@ -427,4 +427,36 @@ function process_send_notification_task(task):
         except PushError as push_error:
             log_warning("In-app socket push failed for student", student_id, push_error)
 ```
+
+---
+---
+
+## Stage 6
+
+### 1. Priority Inbox Logic & Algorithm Design
+The Priority Inbox displays the top `n` most important unread notifications. Priority is calculated using a composite ranking system combining weight and recency:
+1.  **Priority Weights:**
+    *   `Placement` (Weight = 3, Highest Importance)
+    *   `Result` (Weight = 2, Medium Importance)
+    *   `Event` (Weight = 1, Lowest Importance)
+2.  **Tier Sorting Algorithm (Combination of Weight and Recency):**
+    *   Notifications are sorted primarily by their type's weight in descending order.
+    *   If two notifications have the same weight (same type), they are sorted secondarily by their `Timestamp` in descending order (recency).
+    *   This guarantees that important updates like placements always bubble to the top of the inbox, while keeping each category fresh and relevant.
+
+---
+
+### 2. High-Efficiency Stream Maintenance: The Min-Heap Approach
+When notifications are continuously arriving in a high-throughput system, sorting the entire array of notifications of size $N$ repeatedly ($O(N \log N)$ complexity) is highly inefficient and creates CPU bottlenecks.
+
+To maintain the top `K` (e.g., $K = 10$) elements efficiently from an incoming stream, we implement a **Min-Heap (Priority Queue)** of fixed size `K`:
+*   The heap stores the current top `K` highest priority notifications.
+*   The root of the heap holds the "minimum priority" (lowest rank) element among these top `K` items.
+*   **Insertion Logic ($O(\log K)$ complexity):**
+    *   If the heap has fewer than `K` elements, the incoming notification is inserted immediately.
+    *   If the heap is full, the incoming notification's priority is compared to the root's priority. If the new notification has a higher priority, we pop the root and insert the new notification. Otherwise, we discard it.
+*   This drops the computational complexity per new item from $O(N \log N)$ to $O(\log K)$, saving substantial memory and processing cycles.
+
+
+
 

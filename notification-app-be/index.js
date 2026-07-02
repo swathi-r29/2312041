@@ -15,6 +15,16 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/notifications", notificationRoutes);
 
+app.post("/logs", async (req, res) => {
+    const { stack, level, package: packageName, message } = req.body;
+    try {
+        await Log("backend", level, packageName, message);
+        res.status(200).json({ message: "Log forwarded successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to forward log" });
+    }
+});
+
 app.get("/", (req, res) => {
     res.status(200).json({
         message: "Notification API is running"
